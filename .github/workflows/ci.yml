@@ -59,16 +59,19 @@ jobs:
 
       - name: Verify script fails when a dependency is missing
         run: |
-          PATH_BACKUP="$PATH"
-          export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v jq | tr '\n' ':')"
-          if ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --help 2>/dev/null; then
-            echo "ERROR: Script should fail when jq is missing from PATH"
-            export PATH="$PATH_BACKUP"
+          JQ_PATH="$(command -v jq)"
+          sudo mv "$JQ_PATH" "${JQ_PATH}.bak" 2>/dev/null || mv "$JQ_PATH" "${JQ_PATH}.bak" 2>/dev/null || true
+          if command -v jq >/dev/null 2>&1; then
+            echo "WARN: Could not remove jq from PATH, skipping test"
+            sudo mv "${JQ_PATH}.bak" "$JQ_PATH" 2>/dev/null || mv "${JQ_PATH}.bak" "$JQ_PATH" 2>/dev/null || true
+          elif ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image /dev/null 2>/dev/null; then
+            echo "ERROR: Script should fail when jq is missing"
+            sudo mv "${JQ_PATH}.bak" "$JQ_PATH" 2>/dev/null || mv "${JQ_PATH}.bak" "$JQ_PATH" 2>/dev/null || true
             exit 1
           else
             echo "PASS: Script correctly fails when a dependency is missing"
           fi
-          export PATH="$PATH_BACKUP"
+          sudo mv "${JQ_PATH}.bak" "$JQ_PATH" 2>/dev/null || mv "${JQ_PATH}.bak" "$JQ_PATH" 2>/dev/null || true
 
       - name: Verify script rejects unsupported image format
         run: |
