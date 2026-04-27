@@ -9,7 +9,7 @@
 3. **Quarterly minimum**, re-verify if the repo hasn't been touched. Stale guidance is worse than no guidance.
 
 - Last verified: 2026-04-26
-- Changes since last verify: initial creation
+- Changes since last verify: added Windows to CI matrix, enforced 10-minute timeout, added regression tests, jobs now run in parallel
 
 ## Project Overview
 
@@ -25,6 +25,8 @@ This is an **Agent Skill** (per the [Agent Skills spec](https://agentskills.io/s
 - **The `base64` command differs between macOS and Linux.** The script detects this at runtime: macOS `base64` needs `-b 0` to avoid line wrapping; GNU `base64` needs `-w 0`. The `encode_base64` function handles both.
 - **Unicode path normalization uses `python3` as a fallback.** The `normalize_image_path` function uses `python3` for macOS Unicode normalization (narrow no-break space U+202F → regular space). If `python3` is not available, the function falls back to the raw path. This is intentional — the skill's primary dependencies (`curl`, `jq`, `base64`) do NOT include Python, but the unicode normalization is a best-effort enhancement.
 - **The CI `smoke-test` job skips gracefully when no API key secret is set.** It intentionally exits 0 with a skip message. Do not change this to a hard failure — it is by design so forks and PRs from external contributors don't fail CI.
+- **CI runs on `ubuntu-latest`, `macos-latest`, and `windows-latest`.** The validate job uses `shell: bash` (Git Bash on Windows) so the same script runs on all three. If adding a step that requires PowerShell on Windows, gate it with `if: runner.os == 'Windows'` and use `shell: pwsh`.
+- **CI validation and smoke-test jobs run in parallel** (no `needs:` dependency). This keeps total pipeline wall-clock time under 10 minutes.
 - **The default model is `gemma4:31b-cloud`, NOT a local model name.** This model only exists on Ollama's cloud API. Passing a local-only model name (like `moondream:1.8b`) to this skill will likely fail or return unexpected results.
 - **The `.gitignore` excludes `/.agents/skills/` but NOT `.agents/` entirely.** The `.agents/` directory (used by `npx skills add` for local symlinks) is partially excluded — only the skills subdirectory is ignored, so `.agents/skills/image-comprehension-ollama-cloud/` itself may exist locally but should not be committed.
 - **CI/CD has a hard 10-minute total pipeline duration cap.** Per `.github/instructions/cicd.instructions.md`, all build jobs, steps, and flows combined must not exceed 10 minutes. This is a financial constraint. The current CI (validate on 2 OSes + conditional smoke-test) runs well under this. If adding jobs, account for this cap.
@@ -56,7 +58,7 @@ image-comprehension-ollama-cloud/
 │   │   ├── shell.instructions.md
 │   │   └── variable-naming.instructions.md
 │   └── workflows/
-│       └── ci.yml              # CI: validate (macOS + Linux) + conditional smoke test
+│       └── ci.yml              # CI: validate (3 OS, parallel) + conditional smoke test
 ├── docs/                       # Empty — placeholder for assets (no hero image yet)
 ├── skills/
 │   └── image-comprehension-ollama-cloud/
@@ -118,6 +120,7 @@ There are no unit tests other than the built-in `--test` flag in the shell scrip
 6. **Content structure** — Does `skills/` still contain exactly one directory named exactly `image-comprehension-ollama-cloud`?
 7. **Dead ends** — Is `docs/` still empty? Is it still a placeholder?
 8. **CI/CD duration** — Does the total pipeline (all jobs) still run under 10 minutes? Does `ci.yml` use current GitHub Actions versions?
+9. **CI OS matrix** — Are all three platforms (ubuntu-latest, macos-latest, windows-latest) still in the matrix?
 
 ## Maintenance Snapshot
 

@@ -9,14 +9,19 @@ on:
 jobs:
   validate:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Make scripts executable
+        if: runner.os != 'Windows'
         run: chmod +x skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh
 
       - name: Install jq (Linux)
@@ -33,8 +38,14 @@ jobs:
           command -v jq
           command -v base64
 
-      - name: Verify script help works
-        run: ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --help
+      - name: Verify script help exits 0
+        run: |
+          if ! ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --help >/dev/null 2>&1; then
+            echo "ERROR: --help should exit with code 0"
+            exit 1
+          else
+            echo "PASS: --help exits 0"
+          fi
 
       - name: Verify script fails gracefully without API key
         run: |
@@ -46,11 +57,45 @@ jobs:
             echo "PASS: Script correctly fails without API key"
           fi
 
+      - name: Verify script fails when a dependency is missing
+        run: |
+          PATH_BACKUP="$PATH"
+          export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v jq | tr '\n' ':')"
+          if ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --help 2>/dev/null; then
+            echo "ERROR: Script should fail when jq is missing from PATH"
+            export PATH="$PATH_BACKUP"
+            exit 1
+          else
+            echo "PASS: Script correctly fails when a dependency is missing"
+          fi
+          export PATH="$PATH_BACKUP"
+
+      - name: Verify script rejects unsupported image format
+        run: |
+          export OLLAMA_CLOUD_API_KEY="fake-key-for-test"
+          echo "not an image" > /tmp/test_unsupported.txt
+          if ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image /tmp/test_unsupported.txt 2>/dev/null; then
+            echo "ERROR: Script should reject .txt files"
+            exit 1
+          else
+            echo "PASS: Script correctly rejects unsupported image formats"
+          fi
+
+      - name: Verify script reports missing image file
+        run: |
+          export OLLAMA_CLOUD_API_KEY="fake-key-for-test"
+          if ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image /nonexistent/path/fake_image.png 2>/dev/null; then
+            echo "ERROR: Script should fail for nonexistent image file"
+            exit 1
+          else
+            echo "PASS: Script correctly reports missing image file"
+          fi
+
   smoke-test:
-    needs: validate
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Make scripts executable
         run: chmod +x skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh
