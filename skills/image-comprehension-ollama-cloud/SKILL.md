@@ -70,9 +70,29 @@ $HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_o
    - For general descriptions: use the default prompt.
    - For specific information: provide a focused question via `--prompt`.
    - For text extraction: ask about text content explicitly.
+   - For a verbose, structured visual reproduction: ask for a **facsimile in markdown format** (see below).
 3. Run the comprehension command.
 4. The description is printed to stdout (progress logs go to stderr).
 5. Use the returned description to complete your task — debug, verify, analyze, answer the user's question.
+
+### Facsimile in markdown format
+
+When you need a **maximally detailed, structured depiction** of an image — not just a prose description but a visual reproduction that preserves spatial layout, positions, and relationships — ask the model for a facsimile in markdown format. This produces:
+
+- ASCII art layout diagrams showing spatial composition
+- Markdown tables cataloging figures, objects, and their positions
+- Structured component breakdowns of setting, characters, and details
+- Precise annotations of text, labels, and signatures visible in the image
+
+Use this when you need a "you are there" level of visual fidelity, such as comparing a scanned document's layout, understanding a complex diagram's structure, or preserving the spatial arrangement of elements in an illustration.
+
+Example prompt:
+
+```bash
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --image /path/to/image.png --prompt "Reproduce the content and layout of this image as a facsimile in GitHub-flavored Markdown format. Use ASCII art, markdown tables, blockquotes, and any other markdown features that best represent the visual structure, text, and composition of the image. Include every detail you can see: figures, objects, positions, text, and spatial relationships."
+```
+
+**Use the default prompt for a concise description. Use the facsimile prompt when you need maximum visual detail and spatial fidelity.**
 
 ## Default prompt
 
@@ -193,6 +213,7 @@ description=$("$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/com
 | Document reading | `"What is the content of this document? Summarize the key points."` |
 | Error diagnosis | `"What error or issue is shown in this screenshot?"` |
 | Browser QA | `"Does this webpage render correctly? Describe the layout, any visual errors, and whether the content matches what you'd expect."` |
+| Facsimile reproduction | `"Reproduce the content and layout of this image as a facsimile in GitHub-flavored Markdown format. Use ASCII art, markdown tables, blockquotes, and any other markdown features that best represent the visual structure, text, and composition of the image. Include every detail you can see: figures, objects, positions, text, and spatial relationships."` |
 
 ## How to test the skill
 

@@ -3,7 +3,8 @@
   "skills": {
     "image-comprehension-ollama-cloud": {
       "source": "aosama/image-comprehension-ollama-cloud",
-      "sourceType": "github"
+      "sourceType": "github",
+      "computedHash": "eecb52d5688d522578109ad4720b5bfc67f83d3838ee07c6985ed601c58ffc63"
     }
   }
 }
