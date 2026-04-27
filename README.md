@@ -62,7 +62,7 @@ image-comprehension-ollama-cloud/
     └── image-comprehension-ollama-cloud/
         ├── SKILL.md
         └── scripts/
-            └── comprehend_image_cloud.sh
+            └── comprehend_image_ollama_cloud.sh
 ```
 
 This follows the [Agent Skills specification](https://agentskills.io/specification.md).
@@ -71,25 +71,25 @@ This follows the [Agent Skills specification](https://agentskills.io/specificati
 
 ```bash
 # Basic usage — describe an image
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image screenshot.png
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image screenshot.png
 
 # Ask a specific question about an image
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image chart.png --prompt "What are the key trends?"
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image chart.png --prompt "What are the key trends?"
 
 # Extract text from an image
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image receipt.jpg --prompt "Extract and transcribe all visible text."
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image receipt.jpg --prompt "Extract and transcribe all visible text."
 
 # Use a different model
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image photo.png --model qwen3-vl:235b
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image photo.png --model qwen3-vl:235b
 
 # Or set model via environment variable
-OLLAMA_CLOUD_MODEL=llava:7b ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image photo.png
+OLLAMA_CLOUD_MODEL=llava:7b ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image photo.png
 
 # Run the built-in smoke test (makes a real API call)
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --test
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --test
 
 # Show help
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --help
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --help
 ```
 
 ## Configuration
@@ -106,7 +106,7 @@ Any Ollama Cloud vision model works. Popular options:
 
 ```bash
 # Override on the command line
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image photo.png --model llava:7b
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image photo.png --model llava:7b
 
 # Or set via environment variable
 export OLLAMA_CLOUD_MODEL=qwen3-vl:235b
@@ -125,7 +125,7 @@ The `--model` flag takes precedence over `OLLAMA_CLOUD_MODEL`. If neither is set
 
 ```bash
 # Capture only the description
-description=$(./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image photo.png 2>/dev/null)
+description=$(./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image photo.png 2>/dev/null)
 ```
 
 ## How it works

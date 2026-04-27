@@ -23,7 +23,7 @@ The skill includes a built-in smoke test:
 
 ```bash
 export OLLAMA_CLOUD_API_KEY=<your-key>
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --test
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --test
 ```
 
 **Warning:** `--test` makes a real API call and consumes your quota.
@@ -32,9 +32,9 @@ For manual testing, use any image:
 
 ```bash
 export OLLAMA_CLOUD_API_KEY=<your-key>
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image /path/to/image.png
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image /path/to/image.png --model qwen3-vl:235b
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image /path/to/image.png --prompt "What text is visible?"
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image /path/to/image.png
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image /path/to/image.png --model qwen3-vl:235b
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image /path/to/image.png --prompt "What text is visible?"
 ```
 
 ### What to test
@@ -49,7 +49,7 @@ export OLLAMA_CLOUD_API_KEY=<your-key>
 
 ## Code style
 
-- **Shell** (`comprehend_image_cloud.sh`): Use `set -euo pipefail`. Keep it minimal and functional.
+- **Shell** (`comprehend_image_ollama_cloud.sh`): Use `set -euo pipefail`. Keep it minimal and functional.
 - **Markdown**: Keep documentation concise and practical.
 - No Python, no Node.js — this skill is pure shell with standard CLI tools.
 

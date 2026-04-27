@@ -175,7 +175,7 @@ validate_image_path() {
 
 create_test_image() {
     local test_image_directory
-    test_image_directory="$(mktemp -d comprehend-image-cloud-test-XXXXXX)"
+    test_image_directory="$(mktemp -d comprehend-image-ollama-cloud-test-XXXXXX)"
     local smoke_test_image_path="${test_image_directory}/test_image.png"
     # Minimal valid 1x1 PNG (2x2 red square)
     echo "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEklEQVR42mP4n2KEBzGMSmNDACBmnjUIeg0MAAAAAElFTkSuQmCC" \

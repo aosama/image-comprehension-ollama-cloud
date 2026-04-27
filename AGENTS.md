@@ -33,7 +33,7 @@ image-comprehension-ollama-cloud/
     └── image-comprehension-ollama-cloud/
         ├── SKILL.md
         └── scripts/
-            └── comprehend_image_cloud.sh
+            └── comprehend_image_ollama_cloud.sh
 ```
 
 ## Agent Skills Specification
@@ -64,18 +64,18 @@ metadata:
 
 **Shell script syntax check (if shellcheck is available):**
 ```bash
-shellcheck skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh
+shellcheck skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh
 ```
 
 **Smoke test (requires OLLAMA_CLOUD_API_KEY, makes a real API call):**
 ```bash
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --test
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --test
 ```
 
 **Test with a real image:**
 ```bash
 export OLLAMA_CLOUD_API_KEY=<your-key>
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image /path/to/image.png
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image /path/to/image.png
 ```
 
 ## Validation

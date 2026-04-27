@@ -19,7 +19,7 @@ build/
 *~
 
 # Test artifacts
-comprehend-image-cloud-test-*
+comprehend-image-ollama-cloud-test-*
 
 # Agents skill installation
 /.agents/skills/

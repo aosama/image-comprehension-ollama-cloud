@@ -62,7 +62,7 @@ image-comprehension-ollama-cloud/
 │   └── image-comprehension-ollama-cloud/
 │       ├── SKILL.md            # Skill instructions + frontmatter (the "contract" with agents)
 │       └── scripts/
-│           └── comprehend_image_cloud.sh  # The entire runtime — single Bash script
+│           └── comprehend_image_ollama_cloud.sh  # The entire runtime — single Bash script
 ├── .gitignore                  # Excludes .agents/skills/, .env, __pycache__, .DS_Store
 ├── AGENTS.md                   # Agent guidelines for working in this repo
 ├── CONTRIBUTING.md              # How to contribute
@@ -73,7 +73,7 @@ image-comprehension-ollama-cloud/
 ```
 
 Key paths:
-- **The only executable**: `skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh`
+- **The only executable**: `skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh`
 - **The skill contract**: `skills/image-comprehension-ollama-cloud/SKILL.md`
 - **CI config**: `.github/workflows/ci.yml`
 
@@ -81,19 +81,19 @@ Key paths:
 
 ### Validate (no API key needed)
 ```bash
-shellcheck skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh
+shellcheck skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh
 ```
 
 ### Smoke test (requires `OLLAMA_CLOUD_API_KEY`, makes a real API call)
 ```bash
 export OLLAMA_CLOUD_API_KEY=<your-key>
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --test
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --test
 ```
 
 ### Test with a real image
 ```bash
 export OLLAMA_CLOUD_API_KEY=<your-key>
-./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image /path/to/image.png
+./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --image /path/to/image.png
 ```
 
 ### Validate skill spec
@@ -112,7 +112,7 @@ There are no unit tests other than the built-in `--test` flag in the shell scrip
 
 1. **Versions** — Check `VERSIONS.md` for current skill version. Check SKILL.md frontmatter `metadata.version` matches.
 2. **Paths** — Does the skill directory name still match the frontmatter `name` field? Both must be `image-comprehension-ollama-cloud`.
-3. **Scripts** — Does `comprehend_image_cloud.sh` still accept `--image`, `--prompt`, `--model`, `--test`, `--help`? Are the env vars still `OLLAMA_CLOUD_API_KEY`, `OLLAMA_CLOUD_MODEL`, `COMPREHEND_IMAGE_CLOUD_TIMEOUT_SECONDS`?
+3. **Scripts** — Does `comprehend_image_ollama_cloud.sh` still accept `--image`, `--prompt`, `--model`, `--test`, `--help`? Are the env vars still `OLLAMA_CLOUD_API_KEY`, `OLLAMA_CLOUD_MODEL`, `COMPREHEND_IMAGE_CLOUD_TIMEOUT_SECONDS`?
 4. **Config values** — Is the default model still `gemma4:31b-cloud`? Is the API URL still `https://ollama.com/api/generate`? Is the default timeout still 180?
 5. **Known exceptions** — Are the gotchas above still true? Any new ones?
 6. **Content structure** — Does `skills/` still contain exactly one directory named exactly `image-comprehension-ollama-cloud`?

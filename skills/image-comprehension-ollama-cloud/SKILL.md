@@ -60,7 +60,7 @@ Use `--model` or `OLLAMA_CLOUD_MODEL` to switch.
 Always call the script by absolute path. On this machine, and as a default convention, use:
 
 ```bash
-$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh
+$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh
 ```
 
 ## Agent workflow
@@ -88,25 +88,25 @@ Override with `--prompt` for specific questions about the image. Better prompts 
 
 ```bash
 # Basic usage with default prompt and model
-"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --image /path/to/image.png
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --image /path/to/image.png
 
 # Custom question about the image
-"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --image /path/to/screenshot.png --prompt "What text is visible in this screenshot?"
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --image /path/to/screenshot.png --prompt "What text is visible in this screenshot?"
 
 # Use a different cloud model
-"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --image /path/to/image.png --model qwen3-vl:235b
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --image /path/to/image.png --model qwen3-vl:235b
 
 # Use a different model via environment variable
-OLLAMA_CLOUD_MODEL=llava:7b "$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --image /path/to/image.png
+OLLAMA_CLOUD_MODEL=llava:7b "$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --image /path/to/image.png
 
 # Analyze a chart or diagram
-"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --image /path/to/diagram.png --prompt "Explain the flow and relationships in this diagram."
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --image /path/to/diagram.png --prompt "Explain the flow and relationships in this diagram."
 
 # Run the built-in smoke test (makes a real API call, consumes quota)
-"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --test
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --test
 
 # Show help
-"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --help
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --help
 ```
 
 ## Supported image formats
@@ -144,7 +144,7 @@ The image description is printed to **stdout**. Progress logs and error messages
 To capture only the description:
 
 ```bash
-description=$("$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --image /path/to/image.png 2>/dev/null)
+description=$("$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --image /path/to/image.png 2>/dev/null)
 ```
 
 ## Concurrency guidance
@@ -198,10 +198,10 @@ description=$("$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/com
 
 ```bash
 # Run the built-in smoke test (makes a real API call, consumes quota)
-"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --test
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --test
 
 # Test with a real image
-"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh" --image ~/Downloads/some-image.png
+"$HOME/.agents/skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh" --image ~/Downloads/some-image.png
 ```
 
 ## Relationship to image-comprehension-ollama
