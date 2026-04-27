@@ -8,7 +8,7 @@
 2. **At session start**, spot-check 2-3 key facts against the actual codebase (paths, script flags, env vars). If anything drifted, update immediately.
 3. **Quarterly minimum**, re-verify if the repo hasn't been touched. Stale guidance is worse than no guidance.
 
-- Last verified: 2026-04-26
+- Last verified: 2026-04-27
 - Changes since last verify: added Windows to CI matrix, enforced 10-minute timeout, added regression tests, jobs now run in parallel
 
 ## Project Overview
@@ -20,7 +20,7 @@ This is an **Agent Skill** (per the [Agent Skills spec](https://agentskills.io/s
 - **This skill is cloud-only.** It does NOT use a local Ollama server. Do NOT try to run `ollama serve` or `ollama pull` before using this skill — it will never help and may confuse troubleshooting.
 - **`OLLAMA_CLOUD_API_KEY` is required and only read from the environment.** The script never accepts the API key as a CLI argument. It must be exported as an env var. Missing this produces a specific error message with the setup URL.
 - **`--test` makes a real API call and consumes quota.** It is not a unit test — it sends a tiny PNG to Ollama Cloud and checks that the response parses correctly. CI runs it only when the secret is configured; otherwise it skips.
-- **`docs/` is empty.** It exists as a placeholder for a hero image that was never added. Do not add documentation files there without checking the local counterpart repo first.
+- **`docs/` contains the hero image and implementation plans.** The hero image (`docs/hero.png`) is used in the README. Implementation plans live in `docs/plans/`. Do not add general documentation files there.
 - **`skills-lock.json` is not a lockfile for a package manager.** It is the Agent Skills spec's install manifest that maps the skill name to its GitHub source. It is not consumed by npm, pip, or any other tool.
 - **The `base64` command differs between macOS and Linux.** The script detects this at runtime: macOS `base64` needs `-b 0` to avoid line wrapping; GNU `base64` needs `-w 0`. The `encode_base64` function handles both.
 - **Unicode path normalization uses `python3` as a fallback.** The `normalize_image_path` function uses `python3` for macOS Unicode normalization (narrow no-break space U+202F → regular space). If `python3` is not available, the function falls back to the raw path. This is intentional — the skill's primary dependencies (`curl`, `jq`, `base64`) do NOT include Python, but the unicode normalization is a best-effort enhancement.
@@ -30,7 +30,7 @@ This is an **Agent Skill** (per the [Agent Skills spec](https://agentskills.io/s
 - **CI validation and smoke-test jobs run in parallel** (no `needs:` dependency). This keeps total pipeline wall-clock time under 10 minutes.
 - **The default model is `gemma4:31b-cloud`, NOT a local model name.** This model only exists on Ollama's cloud API. Passing a local-only model name (like `moondream:1.8b`) to this skill will likely fail or return unexpected results.
 - **The `.gitignore` excludes `/.agents/skills/` but NOT `.agents/` entirely.** The `.agents/` directory (used by `npx skills add` for local symlinks) is partially excluded — only the skills subdirectory is ignored, so `.agents/skills/image-comprehension-ollama-cloud/` itself may exist locally but should not be committed.
-- **CI/CD has a hard 10-minute total pipeline duration cap.** Per `.github/instructions/cicd.instructions.md`, all build jobs, steps, and flows combined must not exceed 10 minutes. This is a financial constraint. The current CI (validate on 2 OSes + conditional smoke-test) runs well under this. If adding jobs, account for this cap.
+- **CI/CD has a hard 10-minute total pipeline duration cap.** Enforced via `timeout-minutes: 10` on every job. The current CI (validate on 3 OSes in parallel, each ~80s) runs well under this.
 - **GitHub Actions config must be researched fresh before changes.** The CI/CD instructions mandate verifying the latest GitHub Actions capabilities, runtimes, and action versions — never assume pre-training knowledge of GitHub Actions is current.
 
 ## Conventions
@@ -59,8 +59,10 @@ image-comprehension-ollama-cloud/
 │   │   ├── shell.instructions.md
 │   │   └── variable-naming.instructions.md
 │   └── workflows/
-│       └── ci.yml              # CI: validate (3 OS, parallel) + conditional smoke test
-├── docs/                       # Empty — placeholder for assets (no hero image yet)
+│       └── ci.yml              # CI: validate (3 OS, parallel) + E2E smoke test
+├── docs/
+│   ├── hero.png                # Hero image used in README
+│   └── plans/                  # Implementation plans
 ├── skills/
 │   └── image-comprehension-ollama-cloud/
 │       ├── SKILL.md            # Skill instructions + frontmatter (the "contract" with agents)
@@ -105,9 +107,9 @@ npx skills-ref validate ./skills/image-comprehension-ollama-cloud
 ```
 
 ### CI
-CI runs on push/PR to `main`. It has two jobs:
-1. **validate** (always runs): checks dependencies + `--help` + graceful failure without API key, on ubuntu-latest and macos-latest
-2. **smoke-test** (conditional): only runs when `OLLAMA_CLOUD_API_KEY` secret is set in the repo
+CI runs on push/PR to `main`. Single `validate` job across 3 OSes (parallel matrix):
+- **Regression tests** (always run): dependency check, `--help` exit 0, graceful failure without API key, missing dependency detection, unsupported format rejection, missing image file
+- **E2E smoke test** (conditional): runs `--test` on each OS when `OLLAMA_CLOUD_API_KEY` secret is configured; skips gracefully otherwise
 
 There are no unit tests other than the built-in `--test` flag in the shell script.
 
@@ -119,11 +121,11 @@ There are no unit tests other than the built-in `--test` flag in the shell scrip
 4. **Config values** — Is the default model still `gemma4:31b-cloud`? Is the API URL still `https://ollama.com/api/generate`? Is the default timeout still 180?
 5. **Known exceptions** — Are the gotchas above still true? Any new ones?
 6. **Content structure** — Does `skills/` still contain exactly one directory named exactly `image-comprehension-ollama-cloud`?
-7. **Dead ends** — Is `docs/` still empty? Is it still a placeholder?
+7. **Dead ends** — Is `docs/` still only containing `hero.png` and `plans/`? No stray files?
 8. **CI/CD duration** — Does the total pipeline (all jobs) still run under 10 minutes? Does `ci.yml` use current GitHub Actions versions?
 9. **CI OS matrix** — Are all three platforms (ubuntu-latest, macos-latest, windows-latest) still in the matrix?
 
 ## Maintenance Snapshot
 
-- Last verified: 2026-04-26
-- Changes since last verify: initial creation
+- Last verified: 2026-04-27
+- Changes since last verify: added hero image to docs/, merged smoke-test into validate matrix, added 4 regression tests, docs/plans/ created
