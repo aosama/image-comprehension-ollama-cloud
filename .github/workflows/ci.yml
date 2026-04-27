@@ -8,15 +8,24 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
       - name: Make scripts executable
         run: chmod +x skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh
 
-      - name: Install jq
+      - name: Install jq (Linux)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Install jq (macOS)
+        if: runner.os == 'macOS'
+        run: brew install jq
 
       - name: Verify dependencies
         run: |
@@ -40,7 +49,6 @@ jobs:
   smoke-test:
     needs: validate
     runs-on: ubuntu-latest
-    if: ${{ secrets.OLLAMA_CLOUD_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,4 +61,9 @@ jobs:
       - name: Smoke test with Ollama Cloud
         env:
           OLLAMA_CLOUD_API_KEY: ${{ secrets.OLLAMA_CLOUD_API_KEY }}
-        run: ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --test
+        run: |
+          if [ -z "${OLLAMA_CLOUD_API_KEY}" ]; then
+            echo "SKIP: OLLAMA_CLOUD_API_KEY secret is not configured. Skipping smoke test."
+            exit 0
+          fi
+          ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --test
