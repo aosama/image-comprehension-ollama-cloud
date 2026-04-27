@@ -94,24 +94,12 @@ jobs:
             echo "PASS: Script correctly reports missing image file"
           fi
 
-  smoke-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Make scripts executable
-        run: chmod +x skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh
-
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Smoke test with Ollama Cloud
+      - name: End-to-end smoke test with Ollama Cloud
         env:
           OLLAMA_CLOUD_API_KEY: ${{ secrets.OLLAMA_CLOUD_API_KEY }}
         run: |
-          if [ -z "${OLLAMA_CLOUD_API_KEY}" ]; then
-            echo "SKIP: OLLAMA_CLOUD_API_KEY secret is not configured. Skipping smoke test."
+          if [ -z "${OLLAMA_CLOUD_API_KEY:-}" ]; then
+            echo "SKIP: OLLAMA_CLOUD_API_KEY secret is not configured. Skipping E2E smoke test."
             exit 0
           fi
           ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_ollama_cloud.sh --test
