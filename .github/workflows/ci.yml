@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh
+
+      - name: Verify curl is available
+        run: command -v curl
+
+      - name: Verify jq is available
+        run: command -v jq || (sudo apt-get update && sudo apt-get install -y jq) || brew install jq
+
+      - name: Verify base64 is available
+        run: command -v base64
+
+      - name: Verify script help works
+        run: ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --help
+
+      - name: Verify script fails gracefully without API key
+        run: |
+          unset OLLAMA_CLOUD_API_KEY
+          if ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --image /dev/null 2>/dev/null; then
+            echo "ERROR: Script should fail without OLLAMA_CLOUD_API_KEY"
+            exit 1
+          else
+            echo "PASS: Script correctly fails without API key"
+          fi
+
+      - name: Smoke test with Ollama Cloud (requires API key)
+        if: ${{ secrets.OLLAMA_CLOUD_API_KEY != '' }}
+        env:
+          OLLAMA_CLOUD_API_KEY: ${{ secrets.OLLAMA_CLOUD_API_KEY }}
+        run: ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --test

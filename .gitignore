@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Test artifacts
+comprehend-image-cloud-test-*
+
+# Agents skill installation
+/.agents/skills/
+/.agents/skills/*
+
+# Environment
+.env
+.env.local

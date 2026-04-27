@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "skills": {
+    "image-comprehension-ollama-cloud": {
+      "source": "aosama/image-comprehension-ollama-cloud",
+      "sourceType": "github"
+    }
+  }
+}
