@@ -7,17 +7,18 @@
 
 set -euo pipefail
 
-readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+readonly SCRIPT_NAME
 readonly API_URL="https://ollama.com/api/generate"
 readonly DEFAULT_MODEL="gemma4:31b-cloud"
 readonly DEFAULT_PROMPT="Describe this image in detail"
 readonly SUPPORTED_EXTENSIONS="png jpg jpeg gif webp bmp"
 readonly TIMEOUT_SECONDS="${COMPREHEND_IMAGE_CLOUD_TIMEOUT_SECONDS:-180}"
 
-IMAGE_PATH=""
+IMAGE_FILE_PATH=""
 PROMPT="${DEFAULT_PROMPT}"
 MODEL="${DEFAULT_MODEL}"
-TEST_MODE=false
+IS_SMOKE_TEST=false
 
 usage() {
     cat >&2 <<EOF
@@ -57,19 +58,24 @@ fail() {
 }
 
 validate_deps() {
-    local missing=false
+    local missing_dependency_found=false
 
     if ! command -v curl >/dev/null 2>&1; then
         log "Missing dependency: curl"
-        missing=true
+        missing_dependency_found=true
     fi
 
     if ! command -v base64 >/dev/null 2>&1; then
         log "Missing dependency: base64"
-        missing=true
+        missing_dependency_found=true
     fi
 
-    if [ "${missing}" = true ]; then
+    if ! command -v jq >/dev/null 2>&1; then
+        log "Missing dependency: jq"
+        missing_dependency_found=true
+    fi
+
+    if [ "${missing_dependency_found}" = true ]; then
         log "Install missing dependencies and try again."
         exit 2
     fi
@@ -135,45 +141,48 @@ else:
 }
 
 validate_image_path() {
-    local path="$1"
-    local basename="${path##*/}"
-    local ext="${basename##*.}"
-    ext="$(echo "${ext}" | tr '[:upper:]' '[:lower:]')"
+    local image_file_path="$1"
+    local image_basename="${image_file_path##*/}"
+    local image_extension="${image_basename##*.}"
+    image_extension="$(echo "${image_extension}" | tr '[:upper:]' '[:lower:]')"
 
-    if [ ! -f "${path}" ]; then
-        local parent="$(dirname "${path}")"
-        local extra=""
-        if [ -d "${parent}" ]; then
-            local matches="$(ls -1 "${parent}"/"${basename%%.*}"* 2>/dev/null | head -5)"
-            if [ -n "${matches}" ]; then
-                extra=" Similar files in ${parent}: $(echo "${matches}" | tr '\n' ', ')"
+    if [ ! -f "${image_file_path}" ]; then
+        local parent_directory
+        parent_directory="$(dirname "${image_file_path}")"
+        local suggestion_suffix=""
+        if [ -d "${parent_directory}" ]; then
+            local matching_files
+            matching_files="$(find "${parent_directory}" -maxdepth 1 -name "${image_basename%%.*}*" -type f 2>/dev/null | head -5)"
+            if [ -n "${matching_files}" ]; then
+                suggestion_suffix=" Similar files in ${parent_directory}: $(echo "${matching_files}" | tr '\n' ', ')"
             fi
         fi
-        fail "Image file not found: ${path}.${extra}"
+        fail "Image file not found: ${image_file_path}.${suggestion_suffix}"
     fi
 
-    local found=false
+    local extension_matched=false
     for supported in ${SUPPORTED_EXTENSIONS}; do
-        if [ "${ext}" = "${supported}" ]; then
-            found=true
+        if [ "${image_extension}" = "${supported}" ]; then
+            extension_matched=true
             break
         fi
     done
 
-    if [ "${found}" = false ]; then
-        fail "Unsupported image format: .${ext}. Supported: ${SUPPORTED_EXTENSIONS}"
+    if [ "${extension_matched}" = false ]; then
+        fail "Unsupported image format: .${image_extension}. Supported: ${SUPPORTED_EXTENSIONS}"
     fi
 }
 
 create_test_image() {
-    local temp_dir="$(mktemp -d comprehend-image-cloud-test-XXXXXX)"
-    local test_image="${temp_dir}/test_image.png"
+    local test_image_directory
+    test_image_directory="$(mktemp -d comprehend-image-cloud-test-XXXXXX)"
+    local smoke_test_image_path="${test_image_directory}/test_image.png"
     # Minimal valid 1x1 PNG (2x2 red square)
     echo "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEklEQVR42mP4n2KEBzGMSmNDACBmnjUIeg0MAAAAAElFTkSuQmCC" \
-        | base64 --decode > "${test_image}" 2>/dev/null || \
+        | base64 --decode > "${smoke_test_image_path}" 2>/dev/null || \
         echo "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEklEQVR42mP4n2KEBzGMSmNDACBmnjUIeg0MAAAAAElFTkSuQmCC" \
-        | base64 -d > "${test_image}" 2>/dev/null
-    echo "${test_image}"
+        | base64 -d > "${smoke_test_image_path}" 2>/dev/null
+    echo "${smoke_test_image_path}"
 }
 
 do_comprehend() {
@@ -190,10 +199,10 @@ do_comprehend() {
 
     log "Image encoded ($(echo "${image_base64}" | wc -c | tr -d ' ') chars). Sending to Ollama Cloud API..."
 
-    local response
-    local http_code
+    local api_response
+    local http_status_code
 
-    response="$(curl -s -w '\n%{http_code}' \
+    api_response="$(curl -s -w '\n%{http_code}' \
         --max-time "${TIMEOUT_SECONDS}" \
         -X POST \
         -H "Authorization: Bearer ${OLLAMA_CLOUD_API_KEY}" \
@@ -205,18 +214,18 @@ do_comprehend() {
             '{model: $model, prompt: $prompt, images: [$image], stream: false}')" \
         "${API_URL}")"
 
-    http_code="$(printf '%s' "${response}" | tail -1)"
-    local body
-    body="$(printf '%s' "${response}" | sed '$d')"
+    http_status_code="$(printf '%s' "${api_response}" | tail -1)"
+    local response_body
+    response_body="$(printf '%s' "${api_response}" | sed '$d')"
 
-    if [ "${http_code}" -ne 200 ]; then
-        log "ERROR: API returned HTTP ${http_code}"
-        if [ -n "${body}" ]; then
+    if [ "${http_status_code}" -ne 200 ]; then
+        log "ERROR: API returned HTTP ${http_status_code}"
+        if [ -n "${response_body}" ]; then
             local error_message
-            error_message="$(printf '%s' "${body}" | jq -r '.error // .message // "Unknown error"' 2>/dev/null || echo "${body}" | head -c 500)"
+            error_message="$(printf '%s' "${response_body}" | jq -r '.error // .message // "Unknown error"' 2>/dev/null || echo "${response_body}" | head -c 500)"
             log "Response: ${error_message}"
 
-            case "${http_code}" in
+            case "${http_status_code}" in
                 401) log "Your API key may be invalid or expired. Get a key at https://ollama.com/settings/keys" ;;
                 429) log "Rate limited. Wait a moment and try again." ;;
                 5*) log "Ollama Cloud is experiencing issues. Try again later." ;;
@@ -225,18 +234,18 @@ do_comprehend() {
         exit 1
     fi
 
-    local description
-    description="$(printf '%s' "${body}" | jq -r '.response // empty')" || {
-        fail "Failed to parse API response. Raw body: $(printf '%s' "${body}" | head -c 500)"
+    local image_description
+    image_description="$(printf '%s' "${response_body}" | jq -r '.response // empty')" || {
+        fail "Failed to parse API response. Raw body: $(printf '%s' "${response_body}" | head -c 500)"
     }
 
-    if [ -z "${description}" ]; then
-        local error_msg
-        error_msg="$(printf '%s' "${body}" | jq -r '.error // "No response from model"' 2>/dev/null)"
-        fail "Image comprehension returned no output. ${error_msg}"
+    if [ -z "${image_description}" ]; then
+        local error_detail
+        error_detail="$(printf '%s' "${response_body}" | jq -r '.error // "No response from model"' 2>/dev/null)"
+        fail "Image comprehension returned no output. ${error_detail}"
     fi
 
-    printf '%s\n' "${description}"
+    printf '%s\n' "${image_description}"
 }
 
 # --- Argument parsing ---
@@ -247,7 +256,7 @@ while [ "$#" -gt 0 ]; do
             if [ "$#" -lt 2 ]; then
                 fail "--image requires a path argument"
             fi
-            IMAGE_PATH="$2"
+            IMAGE_FILE_PATH="$2"
             shift 2
             ;;
         --prompt)
@@ -265,7 +274,7 @@ while [ "$#" -gt 0 ]; do
             shift 2
             ;;
         --test)
-            TEST_MODE=true
+            IS_SMOKE_TEST=true
             shift
             ;;
         --help)
@@ -295,22 +304,22 @@ fi
 
 validate_deps
 
-if [ "${TEST_MODE}" = true ]; then
+if [ "${IS_SMOKE_TEST}" = true ]; then
     validate_api_key
     log "Running smoke test with model '${MODEL}'..."
-    test_image="$(create_test_image)"
-    trap "rm -f \"${test_image}\" && rmdir \"$(dirname "${test_image}")\"" EXIT
-    do_comprehend "${test_image}" "What do you see in this image?" "${MODEL}"
+    smoke_test_image_path="$(create_test_image)"
+    trap 'rm -f "${smoke_test_image_path}"; rmdir "$(dirname "${smoke_test_image_path}")"' EXIT
+    do_comprehend "${smoke_test_image_path}" "What do you see in this image?" "${MODEL}"
     exit $?
 fi
 
-if [ -z "${IMAGE_PATH}" ]; then
+if [ -z "${IMAGE_FILE_PATH}" ]; then
     fail "No image path given. Use --image /path/to/image or --help."
 fi
 
 validate_api_key
 
-IMAGE_PATH="$(normalize_image_path "${IMAGE_PATH}")"
-validate_image_path "${IMAGE_PATH}"
+IMAGE_FILE_PATH="$(normalize_image_path "${IMAGE_FILE_PATH}")"
+validate_image_path "${IMAGE_FILE_PATH}"
 
-do_comprehend "${IMAGE_PATH}" "${PROMPT}" "${MODEL}"
+do_comprehend "${IMAGE_FILE_PATH}" "${PROMPT}" "${MODEL}"
