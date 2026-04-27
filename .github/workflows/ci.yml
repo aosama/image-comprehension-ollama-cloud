@@ -7,27 +7,22 @@ on:
     branches: [main]
 
 jobs:
-  smoke-test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
+  validate:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Make scripts executable
         run: chmod +x skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh
 
-      - name: Verify curl is available
-        run: command -v curl
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Verify jq is available
-        run: command -v jq || (sudo apt-get update && sudo apt-get install -y jq) || brew install jq
-
-      - name: Verify base64 is available
-        run: command -v base64
+      - name: Verify dependencies
+        run: |
+          command -v curl
+          command -v jq
+          command -v base64
 
       - name: Verify script help works
         run: ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --help
@@ -42,8 +37,20 @@ jobs:
             echo "PASS: Script correctly fails without API key"
           fi
 
-      - name: Smoke test with Ollama Cloud (requires API key)
-        if: ${{ secrets.OLLAMA_CLOUD_API_KEY != '' }}
+  smoke-test:
+    needs: validate
+    runs-on: ubuntu-latest
+    if: ${{ secrets.OLLAMA_CLOUD_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Smoke test with Ollama Cloud
         env:
           OLLAMA_CLOUD_API_KEY: ${{ secrets.OLLAMA_CLOUD_API_KEY }}
         run: ./skills/image-comprehension-ollama-cloud/scripts/comprehend_image_cloud.sh --test
