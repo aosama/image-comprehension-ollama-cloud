@@ -3,6 +3,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Ollama Cloud](https://img.shields.io/badge/Ollama-Cloud-blue.svg)](https://ollama.com)
 
+<p align="center">
+  <img src="docs/hero.png" alt="A cartoon llama on a cloud beaming vision to a robot coding agent — giving AI eyes via Ollama Cloud" width="720">
+</p>
+
 Give your coding agent cloud-powered vision. This skill analyzes image files using Ollama's cloud vision models — no local Ollama installation, no GPU, no model downloads required. Just an API key.
 
 When an agent encounters a screenshot, chart, diagram, photo, or any image file, it calls this skill to get a detailed text description. Everything runs on Ollama's cloud — no local setup needed.
